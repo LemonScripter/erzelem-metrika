@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.venv/
+.env/
+env.bak/
+.env.bak/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# PyCharm
+.idea/
+
+# VSCode
+.vscode/
+
+# Kimenet könyvtárak
+static/output/
+output/
+
+# Modellek
+*.pt
+*.h5
+*.model
+*.pkl
+
+# Rendszerfájlok
+.DS_Store
+Thumbs.db
