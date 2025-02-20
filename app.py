@@ -1,11 +1,4 @@
-# ====================================================================
-# FLASK ALKALMAZÁS - KOCKA-SÍK-FÜGGVÉNYES SZÖVEGÉRTELMEZŐ
-# ====================================================================
-# Fájlnév: app.py
-# Verzió: 1.0
-# Leírás: Flask webszerver a szövegértelmező rendszer futtatásához
-# ====================================================================
-
+# app.py
 from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory
 import os
 import json
@@ -19,6 +12,7 @@ from emotional_space_model import EmotionCube, EmotionalPlane, EmotionalFunction
 from emotion_cube_modeler import EmotionCubeModeler
 from emotion_visualizer import EmotionVisualizer
 from emotion_analysis_demo import EmotionAnalysisDemo
+from context_detector import ContextDetector
 
 app = Flask(__name__)
 
@@ -26,8 +20,16 @@ app = Flask(__name__)
 OUTPUT_DIR = 'static/output'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# Demó osztály inicializálása
+# Demó osztály és kontextus detektor inicializálása
 demo = None
+context_detector = None
+
+def init_detector():
+    """Kontextus-felismerő inicializálása"""
+    global context_detector
+    if context_detector is None:
+        context_detector = ContextDetector()
+        print("Kontextus-felismerő inicializálva")
 
 @app.route('/')
 def index():
@@ -39,14 +41,33 @@ def analyze():
     """Szöveg elemzése"""
     try:
         # Demó inicializálása, ha még nem történt meg
-        global demo
+        global demo, context_detector
         if demo is None:
             demo = EmotionAnalysisDemo()
+            
+        # Kontextus-felismerő inicializálása, ha még nem történt meg
+        if context_detector is None:
+            init_detector()
         
         # Szöveg beolvasása
         text = request.form.get('text', '')
+        context_option = request.form.get('context_option', 'auto')
+        
         if not text:
             return jsonify({'error': 'Nem adott meg szöveget!'}), 400
+        
+        # Kontextus meghatározása
+        if context_option == 'auto':
+            # Automatikus kontextus-felismerés
+            context_info = context_detector.detect_context(text)
+            context = context_info['context']
+            context_detector.save_detection_result(text, context_info)
+            print(f"Automatikusan felismert kontextus: {context} ({context_info['confidence']:.2f})")
+        else:
+            # Manuálisan megadott kontextus
+            context = request.form.get('context', 'general')
+            context_info = {'context': context, 'confidence': 1.0, 'method': 'manual'}
+            print(f"Manuálisan megadott kontextus: {context}")
             
         # Időbélyeg generálása az outputhoz
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -54,7 +75,10 @@ def analyze():
         os.makedirs(output_subdir, exist_ok=True)
         
         # Szöveg elemzése
-        results = demo.analyze_text(text)
+        results = demo.analyze_text(text, context)
+        
+        # Kontextus információ hozzáadása az eredményekhez
+        results['context_info'] = context_info
         
         # Vizualizáció létrehozása
         demo.visualize_text_analysis(results, output_dir=output_subdir)
@@ -67,6 +91,9 @@ def analyze():
             'valence': round(results['overall_emotions']['valence'], 2),
             'arousal': round(results['overall_emotions']['arousal'], 2),
             'dominance': round(results['overall_emotions']['dominance'], 2),
+            'context': context,
+            'context_confidence': context_info.get('confidence', 1.0),
+            'context_method': context_info.get('method', 'manual'),
             'report_url': f"/results/{timestamp}/analysis_report.html"
         })
         
@@ -87,14 +114,30 @@ def results(result_dir, filename):
     """Eredmények fájljainak kiszolgálása"""
     return send_from_directory(f"{OUTPUT_DIR}/{result_dir}", filename)
 
+@app.route('/contexts', methods=['GET'])
+def get_available_contexts():
+    """Elérhető kontextusok lekérdezése"""
+    if context_detector is None:
+        init_detector()
+        
+    return jsonify({
+        'success': True,
+        'contexts': context_detector.get_all_contexts() if hasattr(context_detector, 'get_all_contexts') else 
+                   ['general', 'business', 'personal', 'academic', 'social_media']
+    })
+
 @app.route('/sample')
 def sample():
     """Minta elemzés futtatása"""
     try:
         # Demó inicializálása, ha még nem történt meg
-        global demo
+        global demo, context_detector
         if demo is None:
             demo = EmotionAnalysisDemo()
+            
+        # Kontextus-felismerő inicializálása, ha még nem történt meg
+        if context_detector is None:
+            init_detector()
             
         # Példa szöveg
         sample_text = """
@@ -111,8 +154,13 @@ def sample():
         output_subdir = f"{OUTPUT_DIR}/{timestamp}"
         os.makedirs(output_subdir, exist_ok=True)
         
+        # Elemzés futtatása - automatikus kontextussal
+        context_info = context_detector.detect_context(sample_text)
+        context = context_info['context']
+        
         # Elemzés futtatása
-        results = demo.analyze_text(sample_text)
+        results = demo.analyze_text(sample_text, context)
+        results['context_info'] = context_info
         demo.visualize_text_analysis(results, output_dir=output_subdir)
         
         # Átirányítás az eredményekhez
@@ -125,11 +173,4 @@ def sample():
         return f"Hiba történt a minta elemzés során: {error_message}", 500
 
 if __name__ == '__main__':
-    try:
-        print("Kocka-Sík-Függvényes Szövegértelmező alkalmazás indítása...")
-        print("A webszerver a következő címen érhető el: http://127.0.0.1:5000")
-        app.run(debug=True)
-    except Exception as e:
-        print(f"Hiba történt az alkalmazás indításakor: {str(e)}")
-        print("Részletes hibajelentés:")
-        traceback.print_exc()
+    app.run(debug=True)

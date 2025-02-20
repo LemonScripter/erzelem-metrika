@@ -4,203 +4,309 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-lg-8 mx-auto">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h2 class="h4 mb-0">Szöveg érzelmi elemzése</h2>
-            </div>
-            <div class="card-body">
-                <form id="analyzeForm">
-                    <div class="mb-3">
-                        <label for="text" class="form-label">Elemzendő szöveg:</label>
-                        <textarea class="form-control" id="text" name="text" rows="6" 
-                                 placeholder="Írja vagy másolja be az elemzendő szöveget..." required></textarea>
-                    </div>
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary" id="analyzeButton">
-                            <span class="spinner-border spinner-border-sm d-none" id="loadingSpinner" role="status"></span>
-                            Elemzés indítása
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+   <div class="col-lg-8 mx-auto">
+       <div class="card shadow-sm">
+           <div class="card-header bg-primary text-white">
+               <h2 class="h4 mb-0">Szöveg érzelmi elemzése</h2>
+           </div>
+           <div class="card-body">
+               <form id="analyzeForm">
+                   <div class="mb-3">
+                       <label for="text" class="form-label">Elemzendő szöveg:</label>
+                       <textarea class="form-control" id="text" name="text" rows="6" 
+                                placeholder="Írja vagy másolja be az elemzendő szöveget..." required></textarea>
+                   </div>
+                   <div class="mb-3">
+                       <label for="context_option" class="form-label">Kontextus kezelése:</label>
+                       <div class="form-check form-switch mb-2">
+                           <input class="form-check-input" type="radio" name="context_option" id="context_auto" value="auto" checked>
+                           <label class="form-check-label" for="context_auto">Automatikus felismerés</label>
+                       </div>
+                       <div class="form-check form-switch mb-2">
+                           <input class="form-check-input" type="radio" name="context_option" id="context_manual" value="manual">
+                           <label class="form-check-label" for="context_manual">Manuális megadás</label>
+                       </div>
+                       
+                       <div id="contextSelectorContainer" class="mt-3 d-none">
+                           <select class="form-select" id="context" name="context">
+                               <option value="general" selected>Általános</option>
+                               <!-- További kontextusok JavaScript-tel lesznek betöltve -->
+                           </select>
+                       </div>
+                   </div>
+                   <div class="d-grid gap-2">
+                       <button type="submit" class="btn btn-primary" id="analyzeButton">
+                           <span class="spinner-border spinner-border-sm d-none" id="loadingSpinner" role="status"></span>
+                           Elemzés indítása
+                       </button>
+                   </div>
+               </form>
+           </div>
+       </div>
 
-        <div class="card mt-4 shadow-sm d-none" id="resultsCard">
-            <div class="card-header bg-success text-white">
-                <h3 class="h4 mb-0">Elemzési eredmények</h3>
-            </div>
-            <div class="card-body">
-                <div class="alert alert-primary">
-                    <h4 class="alert-heading">Érzelmi kategória: <span id="emotionCategory" class="badge bg-primary"></span></h4>
-                    <p>Az elemzett szöveg érzelmi profilja:</p>
-                </div>
+       <div class="card mt-4 shadow-sm d-none" id="resultsCard">
+           <div class="card-header bg-success text-white">
+               <h3 class="h4 mb-0">Elemzési eredmények</h3>
+           </div>
+           <div class="card-body">
+               <div class="alert alert-primary">
+                   <h4 class="alert-heading">Érzelmi kategória: <span id="emotionCategory" class="badge bg-primary"></span></h4>
+                   <p>Az elemzett szöveg érzelmi profilja:</p>
+                   <p id="emotionProfileDetails" class="mt-2"></p>
+               </div>
+               <div id="contextInfo" class="alert alert-info d-none mt-2"></div>
 
-                <div class="row mb-4">
-                    <div class="col-md-4">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <h5 class="card-title">Valencia</h5>
-                                <div class="gauge-container">
-                                    <div class="gauge" id="valenceGauge"></div>
-                                    <div class="gauge-value" id="valenceValue"></div>
-                                </div>
-                                <p class="small text-muted mt-2">Pozitív-negatív dimenzió</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <h5 class="card-title">Arousal</h5>
-                                <div class="gauge-container">
-                                    <div class="gauge" id="arousalGauge"></div>
-                                    <div class="gauge-value" id="arousalValue"></div>
-                                </div>
-                                <p class="small text-muted mt-2">Aktivitás-passzivitás dimenzió</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <h5 class="card-title">Dominancia</h5>
-                                <div class="gauge-container">
-                                    <div class="gauge" id="dominanceGauge"></div>
-                                    <div class="gauge-value" id="dominanceValue"></div>
-                                </div>
-                                <p class="small text-muted mt-2">Uralom-alávetettség dimenzió</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+               <div class="row mb-4">
+                   <div class="col-md-4">
+                       <div class="card h-100">
+                           <div class="card-body text-center">
+                               <h5 class="card-title">Valencia</h5>
+                               <div class="gauge-container">
+                                   <div class="gauge" id="valenceGauge"></div>
+                                   <div class="gauge-value" id="valenceValue"></div>
+                               </div>
+                               <p class="small text-muted mt-2">Pozitív-negatív dimenzió</p>
+                           </div>
+                       </div>
+                   </div>
+                   <div class="col-md-4">
+                       <div class="card h-100">
+                           <div class="card-body text-center">
+                               <h5 class="card-title">Arousal</h5>
+                               <div class="gauge-container">
+                                   <div class="gauge" id="arousalGauge"></div>
+                                   <div class="gauge-value" id="arousalValue"></div>
+                               </div>
+                               <p class="small text-muted mt-2">Aktivitás-passzivitás dimenzió</p>
+                           </div>
+                       </div>
+                   </div>
+                   <div class="col-md-4">
+                       <div class="card h-100">
+                           <div class="card-body text-center">
+                               <h5 class="card-title">Dominancia</h5>
+                               <div class="gauge-container">
+                                   <div class="gauge" id="dominanceGauge"></div>
+                                   <div class="gauge-value" id="dominanceValue"></div>
+                               </div>
+                               <p class="small text-muted mt-2">Uralom-alávetettség dimenzió</p>
+                           </div>
+                       </div>
+                   </div>
+               </div>
 
-                <div class="d-grid gap-2">
-                    <a href="#" class="btn btn-primary" id="fullReportLink" target="_blank">Részletes elemzési jelentés megtekintése</a>
-                </div>
-            </div>
-        </div>
-    </div>
+               <div class="d-grid gap-2">
+                   <a href="#" class="btn btn-primary" id="fullReportLink" target="_blank">Részletes elemzési jelentés megtekintése</a>
+               </div>
+           </div>
+       </div>
+   </div>
 </div>
 {% endblock %}
 
 {% block extra_css %}
 <style>
-    .gauge-container {
-        position: relative;
-        width: 150px;
-        height: 80px;
-        margin: 0 auto;
-    }
-    .gauge {
-        width: 100%;
-        height: 20px;
-        background: linear-gradient(to right, #dc3545, #ffc107, #28a745);
-        border-radius: 10px;
-        position: relative;
-        margin-top: 30px;
-    }
-    .gauge:before {
-        content: "0";
-        position: absolute;
-        left: 0;
-        bottom: -25px;
-        font-size: 12px;
-    }
-    .gauge:after {
-        content: "1";
-        position: absolute;
-        right: 0;
-        bottom: -25px;
-        font-size: 12px;
-    }
-    .gauge-value {
-        position: absolute;
-        width: 4px;
-        height: 30px;
-        background: #000;
-        top: -5px;
-        transform: translateX(-50%);
-        transition: left 0.5s ease-out;
-    }
+   .gauge-container {
+       position: relative;
+       width: 150px;
+       height: 80px;
+       margin: 0 auto;
+   }
+   .gauge {
+       width: 100%;
+       height: 20px;
+       background: linear-gradient(to right, #dc3545, #ffc107, #28a745);
+       border-radius: 10px;
+       position: relative;
+       margin-top: 30px;
+   }
+   .gauge:before {
+       content: "0";
+       position: absolute;
+       left: 0;
+       bottom: -25px;
+       font-size: 12px;
+   }
+   .gauge:after {
+       content: "1";
+       position: absolute;
+       right: 0;
+       bottom: -25px;
+       font-size: 12px;
+   }
+   .gauge-value {
+       position: absolute;
+       width: 4px;
+       height: 30px;
+       background: #000;
+       top: -5px;
+       transform: translateX(-50%);
+       transition: left 0.5s ease-out;
+   }
+   .confidence-pill {
+       font-size: 0.8rem;
+       background-color: rgba(0,0,0,0.1);
+       padding: 2px 6px;
+       border-radius: 10px;
+       margin-left: 5px;
+   }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const analyzeForm = document.getElementById('analyzeForm');
-    const analyzeButton = document.getElementById('analyzeButton');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-    const resultsCard = document.getElementById('resultsCard');
-    const emotionCategory = document.getElementById('emotionCategory');
-    const valenceGauge = document.getElementById('valenceGauge');
-    const arousalGauge = document.getElementById('arousalGauge');
-    const dominanceGauge = document.getElementById('dominanceGauge');
-    const valenceValue = document.getElementById('valenceValue');
-    const arousalValue = document.getElementById('arousalValue');
-    const dominanceValue = document.getElementById('dominanceValue');
-    const fullReportLink = document.getElementById('fullReportLink');
+   const analyzeForm = document.getElementById('analyzeForm');
+   const analyzeButton = document.getElementById('analyzeButton');
+   const loadingSpinner = document.getElementById('loadingSpinner');
+   const resultsCard = document.getElementById('resultsCard');
+   const emotionCategory = document.getElementById('emotionCategory');
+   const emotionProfileDetails = document.getElementById('emotionProfileDetails');
+   const contextInfo = document.getElementById('contextInfo');
+   const valenceGauge = document.getElementById('valenceGauge');
+   const arousalGauge = document.getElementById('arousalGauge');
+   const dominanceGauge = document.getElementById('dominanceGauge');
+   const valenceValue = document.getElementById('valenceValue');
+   const arousalValue = document.getElementById('arousalValue');
+   const dominanceValue = document.getElementById('dominanceValue');
+   const fullReportLink = document.getElementById('fullReportLink');
+   
+   // Kontextus választó kezelése
+   const contextOptionAuto = document.getElementById('context_auto');
+   const contextOptionManual = document.getElementById('context_manual');
+   const contextSelectorContainer = document.getElementById('contextSelectorContainer');
+   const contextSelector = document.getElementById('context');
+   
+   if (contextOptionAuto && contextOptionManual && contextSelectorContainer) {
+       // Rádiógombok változásának kezelése
+       contextOptionAuto.addEventListener('change', toggleContextSelector);
+       contextOptionManual.addEventListener('change', toggleContextSelector);
+       
+       // Inicializáláskor ellenőrizzük az állapotot
+       toggleContextSelector();
+       
+       // Kontextusok betöltése
+       loadAvailableContexts();
+   }
+   
+   function toggleContextSelector() {
+       if (contextOptionManual.checked) {
+           contextSelectorContainer.classList.remove('d-none');
+       } else {
+           contextSelectorContainer.classList.add('d-none');
+       }
+   }
+   
+   function loadAvailableContexts() {
+       fetch('/contexts')
+           .then(response => response.json())
+           .then(data => {
+               if (data.success && data.contexts) {
+                   // Kontextusok feltöltése a választóba
+                   contextSelector.innerHTML = '';
+                   
+                   data.contexts.forEach(context => {
+                       const option = document.createElement('option');
+                       option.value = context;
+                       option.textContent = formatContextName(context);
+                       contextSelector.appendChild(option);
+                   });
+               }
+           })
+           .catch(error => {
+               console.error('Kontextusok betöltési hiba:', error);
+           });
+   }
 
-    analyzeForm.addEventListener('submit', function(event) {
-        event.preventDefault();
-        
-        // UI frissítése
-        analyzeButton.disabled = true;
-        loadingSpinner.classList.remove('d-none');
-        analyzeButton.textContent = ' Elemzés folyamatban...';
-        analyzeButton.prepend(loadingSpinner);
-        resultsCard.classList.add('d-none');
-        
-        // Adatok összegyűjtése
-        const formData = new FormData(analyzeForm);
-        
-        // AJAX kérés
-        fetch('/analyze', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Eredmények megjelenítése
-                emotionCategory.textContent = data.overall_category;
-                
-                // Mérőműszerek frissítése
-                updateGauge(valenceGauge, valenceValue, data.valence);
-                updateGauge(arousalGauge, arousalValue, data.arousal);
-                updateGauge(dominanceGauge, dominanceValue, data.dominance);
-                
-                // Jelentés link beállítása
-                fullReportLink.href = data.report_url;
-                
-                // Eredmények megjelenítése
-                resultsCard.classList.remove('d-none');
-            } else {
-                alert('Hiba történt az elemzés során: ' + data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Hiba történt:', error);
-            alert('Hiba történt a kérés feldolgozása során. Kérjük, próbálja újra!');
-        })
-        .finally(() => {
-            // UI visszaállítása
-            analyzeButton.disabled = false;
-            loadingSpinner.classList.add('d-none');
-            analyzeButton.textContent = 'Elemzés indítása';
-        });
-    });
-    
-    function updateGauge(gaugeElement, valueElement, value) {
-        // Érték pozíciójának beállítása
-        const percent = value * 100;
-        valueElement.style.left = `${percent}%`;
-        
-        // Érték megjelenítése
-        valueElement.setAttribute('data-value', value);
-        valueElement.title = value;
-    }
+   analyzeForm.addEventListener('submit', function(event) {
+       event.preventDefault();
+       
+       // UI frissítése
+       analyzeButton.disabled = true;
+       loadingSpinner.classList.remove('d-none');
+       analyzeButton.textContent = ' Elemzés folyamatban...';
+       analyzeButton.prepend(loadingSpinner);
+       resultsCard.classList.add('d-none');
+       
+       // Adatok összegyűjtése
+       const formData = new FormData(analyzeForm);
+       
+       // AJAX kérés
+       fetch('/analyze', {
+           method: 'POST',
+           body: formData
+       })
+       .then(response => response.json())
+       .then(data => {
+           if (data.success) {
+               // Eredmények megjelenítése
+               emotionCategory.textContent = data.overall_category;
+               
+               // Érzelmi profil részletes leírása
+               const valenciaTxt = data.valence > 0.6 ? 'pozitív' : (data.valence < 0.4 ? 'negatív' : 'semleges');
+               const arousalTxt = data.arousal > 0.6 ? 'magas' : (data.arousal < 0.4 ? 'alacsony' : 'közepes');
+               const dominanceTxt = data.dominance > 0.6 ? 'magas' : (data.dominance < 0.4 ? 'alacsony' : 'közepes');
+               
+               emotionProfileDetails.innerHTML = `A szöveg <strong>${valenciaTxt}</strong> érzelmi töltettel, 
+                                              <strong>${arousalTxt}</strong> intenzitással és 
+                                              <strong>${dominanceTxt}</strong> dominanciával rendelkezik 
+                                              (V: ${data.valence.toFixed(2)}, A: ${data.arousal.toFixed(2)}, D: ${data.dominance.toFixed(2)}).`;
+               
+               // Kontextus információ megjelenítése
+               if (contextInfo && data.context) {
+                   let contextHTML = `<strong>Kontextus:</strong> ${formatContextName(data.context)}`;
+                   
+                   if (data.context_method === 'keyword' || data.context_method === 'machine_learning') {
+                       contextHTML += ` <span class="badge bg-info">${Math.round(data.context_confidence * 100)}% konfidencia</span>`;
+                       contextHTML += ` <span class="badge bg-secondary">${data.context_method === 'keyword' ? 'Kulcsszó-alapú' : 'Gépi tanulás'}</span>`;
+                   }
+                   
+                   contextInfo.innerHTML = contextHTML;
+                   contextInfo.classList.remove('d-none');
+               }
+               
+               // Mérőműszerek frissítése
+               updateGauge(valenceGauge, valenceValue, data.valence);
+               updateGauge(arousalGauge, arousalValue, data.arousal);
+               updateGauge(dominanceGauge, dominanceValue, data.dominance);
+               
+               // Jelentés link beállítása
+               fullReportLink.href = data.report_url;
+               
+               // Eredmények megjelenítése
+               resultsCard.classList.remove('d-none');
+           } else {
+               alert('Hiba történt az elemzés során: ' + data.error);
+           }
+       })
+       .catch(error => {
+           console.error('Hiba történt:', error);
+           alert('Hiba történt a kérés feldolgozása során. Kérjük, próbálja újra!');
+       })
+       .finally(() => {
+           // UI visszaállítása
+           analyzeButton.disabled = false;
+           loadingSpinner.classList.add('d-none');
+           analyzeButton.textContent = 'Elemzés indítása';
+       });
+   });
+   
+   function updateGauge(gaugeElement, valueElement, value) {
+       // Érték pozíciójának beállítása
+       const percent = value * 100;
+       valueElement.style.left = `${percent}%`;
+       
+       // Érték megjelenítése
+       valueElement.setAttribute('data-value', value);
+       valueElement.title = value;
+   }
+   
+   function formatContextName(context) {
+       // Kontextus név formázása (első betű nagybetű, underscore helyett szóköz)
+       return context
+           .replace(/_/g, ' ')
+           .replace(/\b\w/g, char => char.toUpperCase());
+   }
 });
 </script>
 {% endblock %}
