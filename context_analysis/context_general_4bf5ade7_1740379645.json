@@ -1,0 +1,16 @@
+{
+  "text": "A szerelembe - mondják -\r\nbelehal, aki él.\r\nDe úgy kell a boldogság,\r\nmint egy falat kenyér.",
+  "text_length": 92,
+  "detection_result": {
+    "context": "general",
+    "confidence": 1,
+    "method": "keyword",
+    "alternatives": [
+      {
+        "context": "personal",
+        "confidence": 0.2
+      }
+    ]
+  },
+  "timestamp": 1740379645
+}
