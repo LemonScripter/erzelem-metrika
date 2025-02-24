@@ -1,10 +1,18 @@
 # app.py
-from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory
+
+# TensorFlow warnings kikapcsolása
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # 3: csak ERROR logok
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # GPU kikapcsolása
+
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory
 import json
 import traceback
 import tensorflow as tf
 from datetime import datetime
+
+# TensorFlow warning kikapcsolása
+tf.get_logger().setLevel('ERROR')
 
 # Importáljuk a saját moduljainkat
 from text_preprocessor import TextPreprocessor
@@ -17,6 +25,9 @@ from context_detector import ContextDetector
 
 app = Flask(__name__)
 
+# Környezeti változók beállítása
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key')
+
 # Globális változók
 OUTPUT_DIR = 'static/output'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -24,18 +35,6 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 # Demó osztály és kontextus detektor inicializálása
 demo = None
 context_detector = None
-
-# GPU memória dinamikus foglalása
-gpus = tf.config.experimental.list_physical_devices('GPU')
-if gpus:
-    try:
-        for gpu in gpus:
-            tf.config.experimental.set_memory_growth(gpu, True)
-    except RuntimeError as e:
-        print(e)
-
-# CPU-only mód kényszerítése
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 def init_detector():
     """Kontextus-felismerő inicializálása"""
