@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 import os
 import json
 import traceback
+import tensorflow as tf
 from datetime import datetime
 
 # Importáljuk a saját moduljainkat
@@ -23,6 +24,18 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 # Demó osztály és kontextus detektor inicializálása
 demo = None
 context_detector = None
+
+# GPU memória dinamikus foglalása
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+    try:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+    except RuntimeError as e:
+        print(e)
+
+# CPU-only mód kényszerítése
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 def init_detector():
     """Kontextus-felismerő inicializálása"""
