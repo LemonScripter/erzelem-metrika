@@ -14,15 +14,7 @@ from datetime import datetime
 # TensorFlow warning kikapcsolása
 tf.get_logger().setLevel('ERROR')
 
-# Importáljuk a saját moduljainkat
-from text_preprocessor import TextPreprocessor
-from emotion_analyzer import EmotionAnalyzer
-from emotional_space_model import EmotionCube, EmotionalPlane, EmotionalFunction
-from emotion_cube_modeler import EmotionCubeModeler
-from emotion_visualizer import EmotionVisualizer
-from emotion_analysis_demo import EmotionAnalysisDemo
-from context_detector import ContextDetector
-
+# Flask app inicializálása
 app = Flask(__name__)
 
 # Környezeti változók beállítása
@@ -32,16 +24,40 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key')
 OUTPUT_DIR = 'static/output'
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# Demó osztály és kontextus detektor inicializálása
+# Globális változók a modulok lusta betöltéséhez
 demo = None
 context_detector = None
 
+# Importálásokat késleltetjük, hogy csak akkor történjenek, 
+# amikor tényleg szükség van rájuk
+text_preprocessor = None
+emotion_analyzer = None
+emotion_cube_modeler = None
+emotion_visualizer = None
+
 def init_detector():
-    """Kontextus-felismerő inicializálása"""
+    """Kontextus-felismerő inicializálása - csak amikor szükséges"""
     global context_detector
     if context_detector is None:
+        # Csak ekkor importáljuk a modult
+        from context_detector import ContextDetector
         context_detector = ContextDetector()
         print("Kontextus-felismerő inicializálva")
+
+def init_demo():
+    """Demó osztály inicializálása - csak amikor szükséges"""
+    global demo
+    if demo is None:
+        # Csak ekkor importáljuk a szükséges modulokat
+        from text_preprocessor import TextPreprocessor
+        from emotion_analyzer import EmotionAnalyzer
+        from emotional_space_model import EmotionCube, EmotionalPlane, EmotionalFunction
+        from emotion_cube_modeler import EmotionCubeModeler
+        from emotion_visualizer import EmotionVisualizer
+        from emotion_analysis_demo import EmotionAnalysisDemo
+        
+        demo = EmotionAnalysisDemo()
+        print("Demó osztály inicializálva")
 
 @app.route('/')
 def index():
@@ -52,14 +68,9 @@ def index():
 def analyze():
     """Szöveg elemzése"""
     try:
-        # Demó inicializálása, ha még nem történt meg
-        global demo, context_detector
-        if demo is None:
-            demo = EmotionAnalysisDemo()
-            
-        # Kontextus-felismerő inicializálása, ha még nem történt meg
-        if context_detector is None:
-            init_detector()
+        # Modulok inicializálása, csak amikor szükséges
+        init_demo()
+        init_detector()
         
         # Szöveg beolvasása
         text = request.form.get('text', '')
@@ -129,8 +140,7 @@ def results(result_dir, filename):
 @app.route('/contexts', methods=['GET'])
 def get_available_contexts():
     """Elérhető kontextusok lekérdezése"""
-    if context_detector is None:
-        init_detector()
+    init_detector()
         
     return jsonify({
         'success': True,
@@ -142,14 +152,9 @@ def get_available_contexts():
 def sample():
     """Minta elemzés futtatása"""
     try:
-        # Demó inicializálása, ha még nem történt meg
-        global demo, context_detector
-        if demo is None:
-            demo = EmotionAnalysisDemo()
-            
-        # Kontextus-felismerő inicializálása, ha még nem történt meg
-        if context_detector is None:
-            init_detector()
+        # Modulok inicializálása, csak amikor szükséges
+        init_demo()
+        init_detector()
             
         # Példa szöveg
         sample_text = """
@@ -184,5 +189,9 @@ def sample():
         print(f"Hiba történt a minta elemzés során: {error_message}")
         return f"Hiba történt a minta elemzés során: {error_message}", 500
 
+# Ez a rész csak akkor hajtódik végre, ha közvetlenül ezt a fájlt futtatod,
+# és nem importáláskor. Render.com-on a run.py fogja indítani az alkalmazást,
+# így ez a rész nem fut le automatikusan.
 if __name__ == '__main__':
+    # Helyi fejlesztéshez
     app.run(debug=True)
