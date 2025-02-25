@@ -1,0 +1,11 @@
+{
+  "text": "Majom!",
+  "text_length": 6,
+  "detection_result": {
+    "context": "general",
+    "confidence": 1,
+    "method": "keyword",
+    "alternatives": []
+  },
+  "timestamp": 1740472720
+}

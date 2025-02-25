@@ -2,13 +2,17 @@ services:
   - type: web
     name: emotion-analyzer
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: python run.py
+    buildCommand: chmod +x setup.sh && ./setup.sh
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --preload --workers 1 --threads 1 --timeout 120
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
       - key: PORT
         value: 10000
+      - key: TF_CPP_MIN_LOG_LEVEL
+        value: 3
+      - key: CUDA_VISIBLE_DEVICES
+        value: -1
+      - key: TF_FORCE_GPU_ALLOW_GROWTH
+        value: true
     plan: free
-    # Növelheted a memória limitet (prémium tervnél)
-    # mem_gb: 1
