@@ -7,8 +7,8 @@
 # ====================================================================
 
 import numpy as np
+import gc
 from typing import List, Dict, Tuple, Union
-from transformers import pipeline
 from text_preprocessor import TextPreprocessor
 
 class EmotionAnalyzer:
@@ -27,22 +27,38 @@ class EmotionAnalyzer:
         """
         self.preprocessor = TextPreprocessor()
         self.use_transformer = use_transformer
+        self.sentiment_pipeline = None
         
         # Érzelmi lexikon betöltése, ha meg van adva
         self.emotion_lexicon = {}
         if lexicon_path:
             self._load_emotion_lexicon(lexicon_path)
             
-        # Transformer alapú klasszifikációs pipeline
-        if use_transformer:
+    def _initialize_transformer(self):
+        """
+        Lusta betöltés a Transformer modellhez.
+        Csak akkor inicializálja, amikor ténylegesen szükség van rá.
+        """
+        if self.sentiment_pipeline is None and self.use_transformer:
             try:
+                # Memória felszabadítása
+                gc.collect()
+                
+                # Csak itt importáljuk a transformers modult
+                from transformers import pipeline
+                
+                # Pipeline betöltése
+                print("Transformer modell betöltése...")
                 self.sentiment_pipeline = pipeline(
                     "sentiment-analysis",
                     model="distilbert-base-uncased-finetuned-sst-2-english"
                 )
+                print("Transformer modell betöltve!")
             except Exception as e:
                 print(f"Hiba a sentiment pipeline inicializálásakor: {e}")
                 print("Alternatív modell használata...")
+                # Csak itt importáljuk a transformers modult
+                from transformers import pipeline
                 self.sentiment_pipeline = pipeline(
                     "sentiment-analysis"
                 )
@@ -139,6 +155,9 @@ class EmotionAnalyzer:
             Érzelmi dimenziók és értékek
         """
         try:
+            # Itt inicializáljuk a transformer modellt, ha még nincs
+            self._initialize_transformer()
+            
             # Mondatokra bontás és elemzés
             sentences = self.preprocessor.split_sentences(text)
             results = []
@@ -224,3 +243,22 @@ class EmotionAnalyzer:
             )
             
         return combined
+        
+    def cleanup(self):
+        """
+        Erőforrások felszabadítása, amikor már nincs szükség az elemzőre
+        """
+        if self.sentiment_pipeline is not None:
+            del self.sentiment_pipeline
+            self.sentiment_pipeline = None
+            
+        # Memória felszabadítása
+        gc.collect()
+        
+        # Ha pytorch is be van töltve, annak cache-ét is ürítjük
+        try:
+            import torch
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except:
+            pass

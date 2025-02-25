@@ -1,11 +1,11 @@
 #!/bin/bash
-# Alap függőségek telepítése
-pip install -r requirements.txt
+# Alap függőségek telepítése requirements.txt nélkül PyTorch
+pip install $(grep -v "torch" requirements.txt)
+
+# PyTorch külön telepítése, csak CPU verzió a memóriahasználat csökkentéséhez
+pip install torch==2.0.0 --extra-index-url https://download.pytorch.org/whl/cpu
 
 # spaCy modellek telepítése
-# Először a kisebb (sm) modelleket telepítjük, mert ezek kevesebb memóriát igényelnek
 python -m spacy download hu_core_news_sm
-# Ha angolra is szükséged van
-# python -m spacy download en_core_web_sm
 
 echo "Setup completed successfully!"
