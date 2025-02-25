@@ -447,7 +447,7 @@ class EmotionAnalysisDemo:
        </head>
        <body>
            <div class="container">
-               <h1>Kocka-Sík-Függvényes Szövegértelmezés Elemzési Jelentés</h1>
+               <h1>Érzelmi térmetrika - bővebb elemzés</h1>
                
                <div class="summary-box">
                    <h2>Elemzési összefoglaló</h2>
@@ -527,7 +527,7 @@ class EmotionAnalysisDemo:
                {sentences_html}
                
                <div class="footer">
-                   <p>Generálva a Kocka-Sík-Függvényes Szövegértelmezési Rendszer által</p>
+                   <p>Az Érzelmi térmetrika algoritmus és vizualizációs logika szerint generálva</p>
                    <p>&copy; {datetime.now().year}</p>
                </div>
            </div>
